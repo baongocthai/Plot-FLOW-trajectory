@@ -11,7 +11,7 @@ Created on Mon Jan  9 16:04:25 2023
 # This is to estimate the horizontal mixing length at a point of observation
 # From D3D-FLOW result, export horizontal velocity at all layer at a specified location as .csv file using QUICKPLOT
 # From D3D-FLOW result, export depth average at all layer at a specified location as .csv file using QUICKPLOT
-# Change the location & vertical_layer in Main block
+# Change the location & vertical_layer, start_date & end_date in Main block
 # =============================================================================
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -48,13 +48,17 @@ os.chdir(directory)
 location = 'TUA'
 vertical_layer = ['layer 1'] 
 duration_hour = 1   #Choose 1hr because WAQ results interval is 1hr
+start_date = '2017-04-20'
+end_date = '2017-04-25'
 
 #Read data & calculate distance
 DepthAverage = ReadRawDataDepthAverage(location)
 DepthAverage = CalculateDistance(DepthAverage)
+DepthAverage = DepthAverage.loc[start_date:end_date]
 
 Layer1 = ReadRawDataHorizontalVelocity(location,vertical_layer[0])
 Layer1 = CalculateDistance(Layer1)
+Layer1 = Layer1.loc[start_date:end_date]
 
 # Plot for depth average
 origin = (0, 0)
