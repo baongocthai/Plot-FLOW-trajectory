@@ -20,7 +20,7 @@ from shapely.geometry import LineString
 
 #%% Function to import results
 def ReadRawDataHorizontalVelocity(station, layer):
-    data = pd.read_csv('horizontal velocity-all-layer-' + location + '.csv')
+    data = pd.read_csv('horizontal velocity-all-layer-' + station + '.csv')
     data['date and time'] = pd.to_datetime(data['date and time'], format='%Y-%m-%d %H:%M:%S')
     data.index = data.pop('date and time')
     selected_data = data[data.columns[data.columns.str.contains(layer)]].iloc[:,0:2] #For each layer, there are 2 columns -> iloc 2 columns
@@ -29,7 +29,7 @@ def ReadRawDataHorizontalVelocity(station, layer):
     
 #%% Function to import results
 def ReadRawDataDepthAverage(station):
-    data = pd.read_csv('depth averaged velocity-' + location + '.csv')
+    data = pd.read_csv('depth averaged velocity-' + station + '.csv')
     data['date and time'] = pd.to_datetime(data['date and time'], format='%Y-%m-%d %H:%M:%S')
     data.index = data.pop('date and time')
     data.columns = ['Velocity x', 'Velocity y']
