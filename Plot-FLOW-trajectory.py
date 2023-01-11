@@ -62,41 +62,42 @@ Layer1 = Layer1.loc[start_date:end_date]
 
 # Plot for depth average
 origin = (0, 0)
-for j in range(len(DepthAverage['Distance x'])):
-    x1 = DepthAverage['Distance x'][j]
-    y1 = DepthAverage['Distance y'][j]
-    line = LineString([origin, (x1, y1)])
-    x2, y2 = line.xy
-    plt.plot(0, 0, x2, y2)
-
-plt.rcParams.update({'font.size': 15})
-plt.tight_layout()
-figure = plt.gcf()
-figure.set_size_inches(18, 6)
-plt.title(location + ' - DepthAverage - after '+ str(duration_hour) + ' hour')
-plt.xlabel('Distance x-direction (m)')
-plt.ylabel('Distance y-direction (m)')
-plt.savefig("DistancePlot\\"+location+'_DepthAverage_After1hour'+'.png', bbox_inches='tight',dpi=600)
-plt.close()
-print (location)
+for i in range(len(all_data_depth_average)):
+    for j in range(len(all_data_depth_average[i]['Distance x'])):
+        x1 = all_data_depth_average[i]['Distance x'][j]
+        y1 = all_data_depth_average[i]['Distance y'][j]
+        line = LineString([origin, (x1, y1)])
+        x2, y2 = line.xy
+        plt.plot(0, 0, x2, y2)
+    plt.rcParams.update({'font.size': 15})
+    plt.tight_layout()
+    figure = plt.gcf()
+    figure.set_size_inches(18, 6)
+    plt.title(location[i] + ' - DepthAverage - after '+ str(duration_hour) + ' hour ('+start_date+ ' to '+end_date+')')
+    plt.xlabel('Distance x-direction (m)')
+    plt.ylabel('Distance y-direction (m)')
+    plt.savefig("DistancePlot\\"+location[i]+'_DepthAverage_After'+ str(duration_hour) + ' hour ('+start_date+ ' to '+end_date+')'+'.png', bbox_inches='tight',dpi=600)
+    plt.close()
+    print (location[i])
 
 # Plot for surface layer 1
 origin = (0, 0)
-for j in range(len(Layer1['Distance x'])):
-    x1 = Layer1['Distance x'][j]
-    y1 = Layer1['Distance y'][j]
-    line = LineString([origin, (x1, y1)])
-    x2, y2 = line.xy
-    plt.plot(0, 0, x2, y2)
-
-plt.rcParams.update({'font.size': 15})
-plt.tight_layout()
-figure = plt.gcf()
-figure.set_size_inches(18, 6)
-plt.title(location + ' - '+ vertical_layer[0] + ' after '+ str(duration_hour) + ' hour')
-plt.xlabel('Distance x-direction (m)')
-plt.ylabel('Distance y-direction (m)')
-plt.savefig("DistancePlot\\"+location+'_'+vertical_layer[0]+'_'+'After1hour'+'.png', bbox_inches='tight',dpi=600)
-plt.close()
-print (location)
+for i in range(len(all_data_layer1)):
+    for j in range(len(all_data_layer1[i]['Distance x'])):
+        x1 = all_data_layer1[i]['Distance x'][j]
+        y1 = all_data_layer1[i]['Distance y'][j]
+        line = LineString([origin, (x1, y1)])
+        x2, y2 = line.xy
+        plt.plot(0, 0, x2, y2)
+    
+    plt.rcParams.update({'font.size': 15})
+    plt.tight_layout()
+    figure = plt.gcf()
+    figure.set_size_inches(18, 6)
+    plt.title(location[i] + ' - '+ vertical_layer[0] + ' after '+ str(duration_hour) + ' hour ('+start_date+ ' to '+end_date+')')
+    plt.xlabel('Distance x-direction (m)')
+    plt.ylabel('Distance y-direction (m)')
+    plt.savefig("DistancePlot\\"+location[i]+'_'+vertical_layer[0]+'_'+'After'+ str(duration_hour) + ' hour ('+start_date+ ' to '+end_date+')'+'.png', bbox_inches='tight',dpi=600)
+    plt.close()
+    print (location[i])
 
