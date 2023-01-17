@@ -60,8 +60,8 @@ location = ['CYR','ECP','JIA','SJ1','SJ3','SJ4','SJ7','SJ8','SJ10','TUA']
 vertical_layer = ['layer 1'] 
 
 duration_second = 10/60 * 3600   #e.g., 10/60 = 10 minutes - depend on interval of D3D-FLOW outputs
-start_date = '2017-04-27 00:00:00'
-end_date = '2017-05-03 00:00:00'
+start_date = '2017-04-20 00:00:00'
+end_date = '2017-04-21 00:00:00'
 
 #Read water level data
 parameter = 'water level'
@@ -77,33 +77,16 @@ all_data_depth_average = []
 for i in range(len(location)):
     DepthAverage = ReadRawDepthAverage(parameter,location[i])
     DepthAverage = CalculateDistance(DepthAverage, duration_second)
+    DepthAverage['Water level (m)'] = all_data_waterlevel[i]['water level (m)']
     all_data_depth_average.append(DepthAverage)
 
 all_data_layer1 = []
 for i in range(len(location)):
     Layer1 = ReadRawDataHorizontalVelocity(location[i],vertical_layer[0])
     Layer1 = CalculateDistance(Layer1, duration_second)
+    Layer1['Water level (m)'] = all_data_waterlevel[i]['water level (m)']
     all_data_layer1.append(Layer1)
     
-#%% Plot water level
-selected_data = all_data_waterlevel
-for i in range(len(selected_data)):
-    selected_data[i] = selected_data[i][start_date:end_date]
-    plt.plot(selected_data[i].index, selected_data[i]['water level (m)'])
-    plt.rcParams.update({'font.size': 15})
-    plt.tight_layout()
-    figure = plt.gcf()
-    figure.set_size_inches(18, 6)
-    plt.title('Water Level (m) at ' + location[i])
-    plt.ylabel('Water level (m)')
-    plt.xlim(selected_data[i].index[0].date(), selected_data[i].index[-1].date())
-    plt.savefig("WaterLevel\\"+location[i]+' ('+str(pd.to_datetime(start_date).date())+ ' to '+
-                str(pd.to_datetime(end_date).date())+')'+'.png', bbox_inches='tight',dpi=600)
-    print (location[i])
-    plt.close()
-
-
-
 #%% Plot progressive vector diagrams
 # Plot for depth average
 selected_data = all_data_depth_average
@@ -111,22 +94,23 @@ origin = (0, 0)
 for i in range(len(selected_data)):
     selected_data[i] = selected_data[i][start_date:end_date]
     for j in range(len(selected_data[i]['Distance x'])):
-        x1 = selected_data[i]['Distance x'][j]
-        y1 = selected_data[i]['Distance y'][j]
+        x1 = origin[0] + selected_data[i]['Distance x'][j]  #Calculation for progressive diagram
+        y1 = origin[1] + selected_data[i]['Distance y'][j]  #Calculation for progressive diagram
         line = LineString([origin, (x1, y1)])
         x2, y2 = line.xy
         plt.plot(0, 0, x2, y2)
         origin = (x2[1], y2[1])
         # if j == 10: break
     plt.plot(0,0, ".", color='black', markersize=10)
-    plt.rcParams.update({'font.size': 15})
+    plt.rcParams.update({'font.size': 12})
     plt.tight_layout()
     figure = plt.gcf()
     figure.set_size_inches(18, 6)
     plt.title(location[i] + ' - DepthAverage ('+ 
-              str(pd.to_datetime(start_date))+ ' to '+str(pd.to_datetime(end_date))+')')
-    plt.xlabel('Distance x-direction (m)')
-    plt.ylabel('Distance y-direction (m)')
+              str(pd.to_datetime(start_date))+ ' to '+str(pd.to_datetime(end_date))+')',size=12)
+    plt.xlabel('East-West movement (m)')
+    plt.ylabel('North-South movement (m)')
+    plt.axis('square')
     plt.savefig("ProgressiveVectorDiagram\\"+location[i]+'_DepthAverage_After '+ str(duration_second) + ' s ('+
                 str(pd.to_datetime(start_date).date())+ ' to '+str(pd.to_datetime(end_date).date())+')'+'.png', bbox_inches='tight',dpi=600)
     plt.close()
@@ -139,28 +123,27 @@ origin = (0, 0)
 for i in range(len(selected_data)):
     selected_data[i] = selected_data[i][start_date:end_date]
     for j in range(len(selected_data[i]['Distance x'])):
-        x1 = selected_data[i]['Distance x'][j]
-        y1 = selected_data[i]['Distance y'][j]
+        x1 = origin[0] + selected_data[i]['Distance x'][j]  #Calculation for progressive diagram
+        y1 = origin[1] + selected_data[i]['Distance y'][j]  #Calculation for progressive diagram
         line = LineString([origin, (x1, y1)])
         x2, y2 = line.xy
         plt.plot(0, 0, x2, y2)
         origin = (x2[1], y2[1])
     plt.plot(0,0, ".", color='black', markersize=10)
-    plt.rcParams.update({'font.size': 15})
+    plt.rcParams.update({'font.size': 12})
     plt.tight_layout()
     figure = plt.gcf()
     figure.set_size_inches(18, 6)
     plt.title(location[i] + ' - '+ vertical_layer[0] + ' (' +
-              str(pd.to_datetime(start_date))+ ' to '+str(pd.to_datetime(end_date))+')')
-    plt.xlabel('Distance x-direction (m)')
-    plt.ylabel('Distance y-direction (m)')
+              str(pd.to_datetime(start_date))+ ' to '+str(pd.to_datetime(end_date))+')',size=12)
+    plt.xlabel('East-West movement (m)')
+    plt.ylabel('North-South movement (m)')
+    plt.axis('square')
     plt.savefig("ProgressiveVectorDiagram\\"+location[i]+'_'+vertical_layer[0]+'_'+'After '+ str(duration_second) + ' s ('+
                 str(pd.to_datetime(start_date).date())+ ' to '+str(pd.to_datetime(end_date).date())+')'+'.png', bbox_inches='tight',dpi=600)
     plt.close()
     print (location[i])
     origin = (0, 0)
-
-    
 
 #%% Plot lines starting from origin
 # Plot for depth average
@@ -207,3 +190,22 @@ for i in range(len(all_data_layer1)):
                 str(pd.to_datetime(start_date).date())+ ' to '+str(pd.to_datetime(end_date).date())+')'+'.png', bbox_inches='tight',dpi=600)
     plt.close()
     print (location[i])
+    
+    
+#%% Plot water level
+selected_data = all_data_waterlevel
+for i in range(len(selected_data)):
+    selected_data[i] = selected_data[i][start_date:end_date]
+    plt.plot(selected_data[i].index, selected_data[i]['water level (m)'])
+    plt.rcParams.update({'font.size': 15})
+    plt.tight_layout()
+    figure = plt.gcf()
+    figure.set_size_inches(18, 6)
+    plt.title('Water Level (m) at ' + location[i])
+    plt.ylabel('Water level (m)')
+    plt.xlim(selected_data[i].index[0].date(), selected_data[i].index[-1].date())
+    plt.savefig("WaterLevel\\"+location[i]+' ('+str(pd.to_datetime(start_date).date())+ ' to '+
+                str(pd.to_datetime(end_date).date())+')'+'.png', bbox_inches='tight',dpi=600)
+    print (location[i])
+    plt.close()
+
