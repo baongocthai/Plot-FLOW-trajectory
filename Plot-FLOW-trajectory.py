@@ -56,19 +56,18 @@ def CalculateDistance(data, data_interval):
 #%% Main block
 directory = r'C:\Users\baongoc.thai\OneDrive - Hydroinformatics Institute Pte Ltd\Desktop\Work\3. SFA APPS\d49e1_aprjun2017'
 os.chdir(directory)
-location = ['CYR','ECP','JIA','SJ1','SJ3','SJ4','SJ7','SJ8','SJ10','TUA']
+location = ['CYR','ECP','JIA','SJ1','SJ3','SJ4','SJ7','SJ8','SJ10','TUA','PP','TP','StJ','PSe','mpa_rl']
 vertical_layer = ['layer 1'] 
 
 duration_second = 10/60 * 3600   #e.g., 10/60 = 10 minutes - depend on interval of D3D-FLOW outputs
-start_date = '2017-04-20 00:00:00'
-end_date = '2017-04-21 00:00:00'
+start_date = '2017-04-12 00:00:00'
+end_date = '2017-04-26 00:00:00'
 
 #Read water level data
 parameter = 'water level'
 all_data_waterlevel = []
 for i in range(len(location)):
     WaterLevel = ReadRawWaterLevel(parameter, location[i])
-    # WaterLevel = WaterLevel.resample('H').mean()    
     all_data_waterlevel.append(WaterLevel)
 
 #Read data & calculate distance
@@ -99,8 +98,10 @@ for i in range(len(selected_data)):
         line = LineString([origin, (x1, y1)])
         x2, y2 = line.xy
         plt.plot(0, 0, x2, y2)
-        origin = (x2[1], y2[1])
-        # if j == 10: break
+        if j == (len(selected_data[i]['Distance x'])-1): break
+        elif selected_data[i].index[j].date() == selected_data[i].index[j+1].date():  #same date to be plotted in the same trajectory
+            origin = (x2[1], y2[1])
+        else: origin = (0,0)
     plt.plot(0,0, ".", color='black', markersize=10)
     plt.rcParams.update({'font.size': 12})
     plt.tight_layout()
@@ -128,7 +129,11 @@ for i in range(len(selected_data)):
         line = LineString([origin, (x1, y1)])
         x2, y2 = line.xy
         plt.plot(0, 0, x2, y2)
-        origin = (x2[1], y2[1])
+        if j == (len(selected_data[i]['Distance x'])-1): break
+        elif selected_data[i].index[j].date() == selected_data[i].index[j+1].date():  #same date to be plotted in the same trajectory
+            origin = (x2[1], y2[1])
+        else: origin = (0,0)
+    plt.plot(0,0, ".", color='black', markersize=10)
     plt.plot(0,0, ".", color='black', markersize=10)
     plt.rcParams.update({'font.size': 12})
     plt.tight_layout()
@@ -208,4 +213,3 @@ for i in range(len(selected_data)):
                 str(pd.to_datetime(end_date).date())+')'+'.png', bbox_inches='tight',dpi=600)
     print (location[i])
     plt.close()
-
