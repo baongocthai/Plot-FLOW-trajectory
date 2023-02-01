@@ -39,11 +39,18 @@ def ReadRawDepthAverage(parameter, station):
     return data
 
 #%% Function to import results
-def ReadRawWaterLevel(parameter, station):
+def ReadParameter(parameter, station, layer):    
     data = pd.read_csv(parameter + '-' + station + '.csv')
     data['date and time'] = pd.to_datetime(data['date and time'], format='%Y-%m-%d %H:%M:%S')
     data.index = data.pop('date and time')
-    data.columns = ['water level (m)']
+    selected_data = data[data.columns[data.columns.str.contains(layer)]].iloc[:,0:1]    #Only surfacelayer
+    return selected_data
+
+#%% Function to import results
+def ReadRawWaterLevel(parameter, station):
+    data = pd.read_csv(parameter + '-' + station + '.csv')
+    data['date and time'] = pd.to_datetime(data['date and time'], format='%Y-%m-%d %H:%M:%S')
+    data.index = data.pop('date and time')    
     return data
 
 #%% Function to import results
@@ -56,19 +63,45 @@ def CalculateDistance(data, data_interval):
 #%% Main block
 directory = r'C:\Users\baongoc.thai\OneDrive - Hydroinformatics Institute Pte Ltd\Desktop\Work\3. SFA APPS\d49e1_aprjun2017'
 os.chdir(directory)
-location = ['CYR','ECP','JIA','SJ1','SJ3','SJ4','SJ7','SJ8','SJ10','TUA','PP','TP','StJ','PSe','mpa_rl']
+location = ['CYR','ECP','JIA','SJ1','SJ3','SJ4','SJ7','SJ8','SJ10','TUA','PP','TP','StJ','PSe','mpa_rl','CHG']
+# location = ['CHG', 'TUA']
 vertical_layer = ['layer 1'] 
 
 duration_second = 10/60 * 3600   #e.g., 10/60 = 10 minutes - depend on interval of D3D-FLOW outputs
-start_date = '2017-04-12 00:00:00'
-end_date = '2017-04-26 00:00:00'
+start_date = '2017-04-19 18:00:00'
+end_date = '2017-04-27 06:00:00'
 
 #Read water level data
 parameter = 'water level'
 all_data_waterlevel = []
 for i in range(len(location)):
     WaterLevel = ReadRawWaterLevel(parameter, location[i])
+    WaterLevel.rename(columns={ WaterLevel.columns[0]: "water level (m)" }, inplace = True)
     all_data_waterlevel.append(WaterLevel)
+    
+#Read salinity data
+parameter = 'salinity'
+all_data_salinity = []
+for i in range(len(location)):
+    Salinity = ReadParameter(parameter, location[i], vertical_layer[0])
+    Salinity.rename(columns={ Salinity.columns[0]: "salinity (ppt)" }, inplace = True)
+    all_data_salinity.append(Salinity)
+    
+#Read discharge data
+parameter = 'discharge'
+all_data_discharge = []
+for i in range(len(location)):
+    Discharge = ReadParameter(parameter, location[i], vertical_layer[0])
+    Discharge.rename(columns={ Discharge.columns[0]: "discharge (m3/s)" }, inplace = True)
+    all_data_discharge.append(Discharge)
+
+#Read water depth data
+parameter = 'water depth'
+all_data_waterdepth = []
+for i in range(len(location)):
+    WaterDepth = ReadRawWaterLevel(parameter, location[i])
+    WaterDepth.rename(columns={ WaterDepth.columns[0]: "water depth (m)" }, inplace = True)
+    all_data_waterdepth.append(WaterDepth)
 
 #Read data & calculate distance
 parameter = 'depth averaged velocity'
@@ -201,15 +234,76 @@ for i in range(len(all_data_layer1)):
 selected_data = all_data_waterlevel
 for i in range(len(selected_data)):
     selected_data[i] = selected_data[i][start_date:end_date]
-    plt.plot(selected_data[i].index, selected_data[i]['water level (m)'])
+    plt.plot(selected_data[i].index, selected_data[i]['water level (m)'],label = location[i])
     plt.rcParams.update({'font.size': 15})
     plt.tight_layout()
     figure = plt.gcf()
     figure.set_size_inches(18, 6)
     plt.title('Water Level (m) at ' + location[i])
     plt.ylabel('Water level (m)')
-    plt.xlim(selected_data[i].index[0].date(), selected_data[i].index[-1].date())
-    plt.savefig("WaterLevel\\"+location[i]+' ('+str(pd.to_datetime(start_date).date())+ ' to '+
+    plt.xlim(selected_data[i].index[0], selected_data[i].index[-1])
+    plt.legend()
+    plt.savefig(
+        "WaterLevel\\"+
+                location[i]+' ('+str(pd.to_datetime(start_date).date())+ ' to '+
                 str(pd.to_datetime(end_date).date())+')'+'.png', bbox_inches='tight',dpi=600)
     print (location[i])
     plt.close()
+
+#%% Plot Salinity
+selected_data = all_data_salinity
+for i in range(len(selected_data)):
+    selected_data[i] = selected_data[i][start_date:end_date]
+    plt.plot(selected_data[i].index, selected_data[i]['salinity (ppt)'],label = location[i])
+    plt.rcParams.update({'font.size': 15})
+    plt.tight_layout()
+    figure = plt.gcf()
+    figure.set_size_inches(18, 6)
+    plt.title('Salinity (ppt) at ' + location[i])
+    plt.ylabel('Salinity (ppt)')
+    plt.xlim(selected_data[i].index[0], selected_data[i].index[-1])
+    plt.legend()
+    plt.savefig(
+        "WaterLevel\\"+
+                location[i]+' ('+str(pd.to_datetime(start_date).date())+ ' to '+
+                str(pd.to_datetime(end_date).date())+')'+'.png', bbox_inches='tight',dpi=600)
+    print (location[i])
+    plt.close()
+
+#%% Plot Discharge
+selected_data = all_data_discharge
+for i in range(len(selected_data)):
+    selected_data[i] = selected_data[i][start_date:end_date]
+    plt.plot(selected_data[i].index, selected_data[i]['discharge (m3/s)'],label = location[i])
+    plt.rcParams.update({'font.size': 15})
+    plt.tight_layout()
+    figure = plt.gcf()
+    figure.set_size_inches(18, 6)
+    plt.title('Discharge (m3/s) at ' + location[i])
+    plt.ylabel('Discharge (m3/s)')
+    plt.xlim(selected_data[i].index[0], selected_data[i].index[-1])
+    plt.legend()
+    plt.savefig(
+        "WaterLevel\\"+
+                location[i]+' ('+str(pd.to_datetime(start_date).date())+ ' to '+
+                str(pd.to_datetime(end_date).date())+')'+'.png', bbox_inches='tight',dpi=600)
+    print (location[i])
+    plt.close()
+    
+#%% Water Depth
+selected_data = all_data_waterdepth
+
+mean_depth = []
+for i in range(len(selected_data)):
+    mean_depth.append(selected_data[i].mean()[0])
+AverageDepth = pd.DataFrame(mean_depth, location)
+AverageDepth.rename(columns={ AverageDepth.columns[0]: "average depth (m)" }, inplace = True)
+AverageDepth.to_csv('Average depth (m) at selected locations.csv')
+
+surface_layer = []
+for i in range(len(selected_data)):
+    selected_data[i]['layer 1 depth (m)'] = selected_data[i]['water depth (m)']/20 #20 signma layers
+    surface_layer.append(selected_data[i].mean()[1])
+SurfaceLayer = pd.DataFrame(surface_layer, location)
+SurfaceLayer.rename(columns={ SurfaceLayer.columns[0]: "surface layer depth (m)" }, inplace = True)
+SurfaceLayer.to_csv('Surface layer depth (m) at selected locations.csv')
