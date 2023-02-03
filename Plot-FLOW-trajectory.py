@@ -15,11 +15,13 @@ Created on Mon Jan  9 16:04:25 2023
 # Change the location & vertical_layer, start_date & end_date in Main block
 # Plot all distance starting from origin
 # Plot progressive vector diagram - assuming that the velocity around the location of interest does not change
+# Convert distance to next co-ordinate: https://stackoverflow.com/questions/7477003/calculating-new-longitude-latitude-from-old-n-meters
 # =============================================================================
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from shapely.geometry import LineString
+import math
 
 #%% Function to import results
 def ReadRawDataHorizontalVelocity(station, layer):
@@ -68,8 +70,12 @@ location = ['CYR','ECP','JIA','SJ1','SJ3','SJ4','SJ7','SJ8','SJ10','TUA','PP','T
 vertical_layer = ['layer 1'] 
 
 duration_second = 10/60 * 3600   #e.g., 10/60 = 10 minutes - depend on interval of D3D-FLOW outputs
-start_date = '2017-04-19 18:00:00'
-end_date = '2017-04-27 06:00:00'
+start_date = '2017-04-20 00:00:00'
+end_date = '2017-04-21 00:00:00'
+
+#Read observation locations
+Obs_location = pd.read_csv('Observation points locations.csv')
+Obs_location.index = Obs_location.pop('Station')
 
 #Read water level data
 parameter = 'water level'
@@ -109,16 +115,43 @@ all_data_depth_average = []
 for i in range(len(location)):
     DepthAverage = ReadRawDepthAverage(parameter,location[i])
     DepthAverage = CalculateDistance(DepthAverage, duration_second)
-    DepthAverage['Water level (m)'] = all_data_waterlevel[i]['water level (m)']
+    # DepthAverage['Water level (m)'] = all_data_waterlevel[i]['water level (m)']
     all_data_depth_average.append(DepthAverage)
 
 all_data_layer1 = []
 for i in range(len(location)):
     Layer1 = ReadRawDataHorizontalVelocity(location[i],vertical_layer[0])
     Layer1 = CalculateDistance(Layer1, duration_second)
-    Layer1['Water level (m)'] = all_data_waterlevel[i]['water level (m)']
+    # Layer1['Water level (m)'] = all_data_waterlevel[i]['water level (m)']
     all_data_layer1.append(Layer1)
     
+    
+#%% Calculate next position
+selected_data = all_data_depth_average
+# origin = (103.65504, 1.2894661)
+for i in range(len(selected_data)):
+    origin = (Obs_location.loc[location[i]][0], Obs_location.loc[location[i]][1])   #Lon & Lat of observation points
+    selected_data[i] = selected_data[i][start_date:end_date]
+    selected_data[i]['Lat'] = origin[1]
+    selected_data[i]['Lon'] = origin[0]
+    for j in range(len(selected_data[i]['Distance x'])):
+        selected_data[i]['Lat'][j+1] = selected_data[i]['Lat'][j] + selected_data[i]['Distance y'][j]/1000/6378*180/math.pi  #Calculation for progressive diagram
+        selected_data[i]['Lon'][j+1] = selected_data[i]['Lon'][j] + selected_data[i]['Distance x'][j]/1000/6378*180/math.pi/math.cos(selected_data[i]['Lat'][j+1]*math.pi/180)  #Calculation for progressive diagram
+        print(j)
+        if j+1 >= (len(selected_data[i]['Distance x'])-1): 
+            break
+        if selected_data[i].index[j+1].date() != selected_data[i].index[j].date():
+            selected_data[i]['Lat'][j+1] = origin[1]    #reset origin for the next day
+            selected_data[i]['Lon'][j+1] = origin[0]
+            j=j+1
+        elif selected_data[i].index[j+1].date() == selected_data[i].index[j].date():  #same date to be plotted in the same trajectory
+            continue
+
+#Write file to csv
+for i in range(len(selected_data)):
+    filename = location[i] + '_' + str(pd.to_datetime(start_date).date()) + '-' + str(pd.to_datetime(end_date).date()) + '.csv'
+    selected_data[i].to_csv('1-day Position\\' + filename)
+
 #%% Plot progressive vector diagrams
 # Plot for depth average
 selected_data = all_data_depth_average
@@ -134,7 +167,7 @@ for i in range(len(selected_data)):
         if j == (len(selected_data[i]['Distance x'])-1): break
         elif selected_data[i].index[j].date() == selected_data[i].index[j+1].date():  #same date to be plotted in the same trajectory
             origin = (x2[1], y2[1])
-        else: origin = (0,0)
+        else: origin = (0,0)    #reset origin for the next day
     plt.plot(0,0, ".", color='black', markersize=10)
     plt.rcParams.update({'font.size': 12})
     plt.tight_layout()
